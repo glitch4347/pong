@@ -1,10 +1,11 @@
 use macroquad::prelude::*;
 
 
-type Point = (u16, u16);
+type Point = (i32, i32);
 
 struct Ball {
-    position: Point
+    position: Point,
+    dir: Point
 }
 
 impl Ball {
@@ -15,10 +16,10 @@ impl Ball {
 
 
 struct Bar {
-    length: u16,
-    offset: u16,
-    x: u16,
-    dir: i8
+    length: i32,
+    offset: i32,
+    x: i32,
+    dir: i32
 }
 
 impl Bar {
@@ -29,7 +30,7 @@ impl Bar {
             game.render_pixel((self.x, i), WHITE);
         }
     }
-    fn tick(&mut self, vertical_offset: u16) {
+    fn tick(&mut self, vertical_offset: i32) {
         if self.dir != 0 {
             if self.dir == -1 && self.offset > 1 {
                 self.offset -= 1;
@@ -45,12 +46,12 @@ impl Bar {
 
         
 struct Game {
-    pixel_width: u16,
-    pixel_heigh: u16,
-    game_screen_width: u16,
-    game_screen_height: u16,
-    game_width: u16,
-    game_height: u16,
+    pixel_width: i32,
+    pixel_heigh: i32,
+    game_screen_width: i32,
+    game_screen_height: i32,
+    game_width: i32,
+    game_height: i32,
     bar_left: Bar,
     bar_right: Bar,
     ball: Ball
@@ -84,7 +85,8 @@ impl Game {
         };
 
         let ball = Ball {
-            position: (game_width / 2, game_height / 2)
+            position: (game_width / 2, game_height / 2),
+            dir: (1, 1)
         };
         
 
@@ -116,11 +118,40 @@ impl Game {
         }
     }
 
-    fn tick(&mut self) {
+    fn tick(&mut self) -> bool {
         self.bar_left.tick(self.game_height);
         self.bar_right.tick(self.game_height);
-    }
+        
+        if self.ball.position.1 as f32 + self.ball.dir.1 as f32 >= self.game_height as f32 {
+            self.ball.dir.1 *= -1;
+        }
+        
+        if self.ball.position.1 + self.ball.dir.1 <= 0 {
+            self.ball.dir.1 *= -1;
+        }
 
+        if self.ball.position.0 == 1 && 
+            self.ball.position.1 >= self.bar_left.offset &&
+            self.ball.position.1 <= self.bar_left.offset + self.bar_left.length {
+                self.ball.dir.0 *= -1;
+            }
+
+        if self.ball.position.0 + 1 == self.game_width && 
+            self.ball.position.1 >= self.bar_right.offset &&
+            self.ball.position.1 <= self.bar_right.offset + self.bar_right.length {
+                self.ball.dir.0 *= -1;
+            }
+
+        self.ball.position.0 += self.ball.dir.0;
+        self.ball.position.1 += self.ball.dir.1;
+
+        if self.ball.position.0 < 0 || self.ball.position.0 > self.game_width {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
 
     fn render(&self) {
         clear_background(BLACK);
@@ -166,13 +197,44 @@ async fn main() {
     let mut game= Game::new();
     let mut last_update = get_time();
     let speed = 0.1;
+    let mut game_over = false;
     loop {
-        game.handle_keys();
-        if get_time() - last_update > speed {
-            last_update = get_time();
-            game.tick();
+        if !game_over {
+            game.handle_keys();
+            if get_time() - last_update > speed {
+                last_update = get_time();
+                game_over = game.tick();
+            }
+            game.render();
+        } else {
+            clear_background(WHITE);
+            let text1 = "Game Over. Press [enter] to play again.";
+            let text2 = "[Q] and [A] to move left bar and arrows to move right bar";
+            let font_size = 30.;
+            let text_size = measure_text(text1, None, font_size as _, 1.0);
+
+            draw_text(
+                text1,
+                screen_width() / 2. - text_size.width / 2.,
+                screen_height() / 2. - text_size.height,
+                font_size,
+                DARKGRAY,
+            );
+
+            draw_text(
+                text2,
+                screen_width() / 2. - text_size.width / 2.,
+                screen_height() / 2. + text_size.height,
+                font_size * 0.75,
+                DARKGRAY,
+            );
+
+            if is_key_down(KeyCode::Enter) {
+                game = Game::new();
+                last_update = get_time();
+                game_over = false;
+            }
         }
-        game.render();
         next_frame().await
     }
 }
