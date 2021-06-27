@@ -17,7 +17,8 @@ impl Ball {
 struct Bar {
     length: u16,
     offset: u16,
-    x: u16
+    x: u16,
+    dir: i8
 }
 
 impl Bar {
@@ -26,6 +27,18 @@ impl Bar {
         let to = self.offset + self.length;
         for i in from..to {
             game.render_pixel((self.x, i), WHITE);
+        }
+    }
+    fn tick(&mut self, vertical_offset: u16) {
+        if self.dir != 0 {
+            if self.dir == -1 && self.offset > 1 {
+                self.offset -= 1;
+            }
+
+            if self.dir == 1 && self.offset + self.length + 1 < vertical_offset {
+                self.offset += 1;
+            }
+            self.dir = 0;
         }
     }
 }
@@ -59,13 +72,15 @@ impl Game {
         let bar_left = Bar { 
             length: bar_length, 
             offset: bar_offset,
-            x: 0
+            x: 0,
+            dir: 0
         };
 
         let bar_right = Bar { 
             length: bar_length, 
             offset: bar_offset,
-            x: game_width - 1
+            x: game_width - 1,
+            dir: 0
         };
 
         let ball = Ball {
@@ -85,6 +100,27 @@ impl Game {
             ball
         }
     }
+
+    fn handle_keys(&mut self) {
+        if is_key_down(KeyCode::Up) {
+            self.bar_right.dir = -1;
+        }
+        if is_key_down(KeyCode::Down) {
+            self.bar_right.dir = 1;
+        }
+        if is_key_down(KeyCode::Q) {
+            self.bar_left.dir = -1;
+        }
+        if is_key_down(KeyCode::A) {
+            self.bar_left.dir = 1;
+        }
+    }
+
+    fn tick(&mut self) {
+        self.bar_left.tick(self.game_height);
+        self.bar_right.tick(self.game_height);
+    }
+
 
     fn render(&self) {
         clear_background(BLACK);
@@ -127,11 +163,16 @@ impl Game {
 #[macroquad::main("Pong")]
 async fn main() {
 
-    let g= Game::new();
-
+    let mut game= Game::new();
+    let mut last_update = get_time();
+    let speed = 0.1;
     loop {
-        g.render();
-        // TODO: fix window size
+        game.handle_keys();
+        if get_time() - last_update > speed {
+            last_update = get_time();
+            game.tick();
+        }
+        game.render();
         next_frame().await
     }
 }
