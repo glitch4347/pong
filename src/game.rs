@@ -5,7 +5,6 @@ use crate::bar::Bar;
 use crate::ball::Ball;
 
 
-
 pub struct Game {
     bar_left: Bar,
     bar_right: Bar,
@@ -17,23 +16,22 @@ impl Game {
 
         let bar_left = Bar {
             length: BAR_LENGTH,
-            offset: (GAME_HEIGHT - BAR_LENGTH) / 2,
+            offset: (GAME_HEIGHT - BAR_LENGTH) as f32 / 2.,
             x: 0,
-            dir: 0
+            dir: 0.
         };
 
         let bar_right = Bar { 
             length: BAR_LENGTH,
-            offset: (GAME_HEIGHT - BAR_LENGTH) / 2,
+            offset: (GAME_HEIGHT - BAR_LENGTH) as f32 / 2.,
             x: GAME_WIDTH - 1,
-            dir: 0
+            dir: 0.
         };
 
         let ball = Ball {
             position: (GAME_WIDTH as f32 / 2., GAME_HEIGHT as f32 / 2.),
-            dir: (2., 1.)
+            dir: BALL_DIR
         };
-        
 
         return Game {
             bar_left,

@@ -7,17 +7,15 @@ use crate::types::*;
 
 pub struct Bar {
     pub length: u32,
-    pub offset: u32,
+    pub offset: f32,
     pub x: u32,
-    pub dir: i32
+    pub dir: f32
 }
 
 impl Bar {
     pub fn render(&self, game: &Game) {
-        let from = self.offset;
-        let to = self.offset + self.length;
-        for i in from..to {
-            game.render_pixel((self.x as f32, i as f32), WHITE);
+        for i in 0..self.length {
+            game.render_pixel((self.x as f32, self.offset + i as f32), WHITE);
         }
     }
     
@@ -36,19 +34,22 @@ impl Bar {
         if ball.position.1 < self.offset as f32 {
             return false;
         }
-        return ball.position.1 <= (self.offset + self.length) as f32;
+        return ball.position.1 <= (self.offset + self.length as f32);
     }
 
     pub fn tick(&mut self) {
-        if self.dir != 0 {
-            if self.dir == -1 && self.offset > 1 {
-                self.offset -= 1;
-            }
 
-            if self.dir == 1 && self.offset + self.length < GAME_HEIGHT {
-                self.offset += 1;
-            }
-            self.dir = 0;
+        self.offset += self.dir;
+
+        if self.offset + self.length as f32 >= GAME_HEIGHT as f32 {
+            self.offset = (GAME_HEIGHT - self.length) as f32;
         }
+        
+        if self.offset < 0. {
+            self.offset = 0.;
+        }
+
+        self.dir = 0.;
+        
     }
 }

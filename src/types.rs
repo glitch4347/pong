@@ -9,10 +9,10 @@ pub const GAME_HEIGHT: u32 = GAME_SCREEN_HEIGHT / PIXEL_HEIGHT;
 
 pub const BAR_LENGTH: u32 = 50;
 
-pub const GAME_SPEED: f64 = 0.04;
+pub const GAME_SPEED: f64 = 0.008;
 
-pub const BAR_SPEED: i32 = 1;
-
+pub const BAR_SPEED: f32 = 0.3;
 
 pub type Point = (f32, f32);
 
+pub const  BALL_DIR: Point = (0.3, 0.1);
