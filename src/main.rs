@@ -60,7 +60,7 @@ impl Bar {
                 self.offset -= 1;
             }
 
-            if self.dir == 1 && self.offset + self.length + 1 < GAME_HEIGHT {
+            if self.dir == 1 && self.offset + self.length < GAME_HEIGHT {
                 self.offset += 1;
             }
             self.dir = 0;
