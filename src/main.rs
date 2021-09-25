@@ -5,7 +5,6 @@ use pong::scores::render_scores;
 use pong::types;
 
 
-
 #[macroquad::main("Pong")]
 async fn main() {
 
@@ -15,8 +14,6 @@ async fn main() {
 
     let mut score_a = 0u32;
     let mut score_b = 0u32;
-
-   
 
     loop {
         if !game_over {

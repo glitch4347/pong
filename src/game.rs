@@ -5,7 +5,6 @@ use crate::bar::Bar;
 use crate::ball::Ball;
 
 
-
 pub struct Game {
     bar_left: Bar,
     bar_right: Bar,
