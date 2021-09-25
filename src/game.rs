@@ -5,6 +5,7 @@ use crate::bar::Bar;
 use crate::ball::Ball;
 
 
+
 pub struct Game {
     bar_left: Bar,
     bar_right: Bar,
@@ -55,17 +56,19 @@ impl Game {
         }
     }
 
-    pub fn tick(&mut self) -> bool {
+    pub fn tick(&mut self) -> GameState {
         self.bar_left.tick();
         self.bar_right.tick();
         self.ball.tick(&self.bar_left, &self.bar_right);
 
-        if self.ball.position.0 < 0. || self.ball.position.0 > GAME_WIDTH as f32 {
-            return true;
-        } else {
-            return false;
+        if self.ball.position.0 < 0. {
+            return GameState::WinB
         }
-
+        if self.ball.position.0 > GAME_WIDTH as f32 {
+            return GameState::WinA;
+        } else {
+            return GameState::Continue
+        }
     }
 
     pub fn render(&self) {

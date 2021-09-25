@@ -13,6 +13,14 @@ pub const GAME_SPEED: f64 = 0.008;
 
 pub const BAR_SPEED: f32 = 0.3;
 
+pub const MAX_SCORE: u32 = 10;
+
 pub type Point = (f32, f32);
 
 pub const  BALL_DIR: Point = (0.3, 0.1);
+
+pub enum GameState {
+    WinA,
+    WinB,
+    Continue
+}

@@ -1,7 +1,10 @@
 use macroquad::prelude::*;
 
 use pong::game::Game;
+use pong::scores::render_scores;
 use pong::types;
+
+
 
 #[macroquad::main("Pong")]
 async fn main() {
@@ -9,14 +12,38 @@ async fn main() {
     let mut game = Game::new();
     let mut last_update = get_time();
     let mut game_over = false;
+
+    let mut score_a = 0u32;
+    let mut score_b = 0u32;
+
+   
+
     loop {
         if !game_over {
             game.handle_keys();
             if get_time() - last_update > types::GAME_SPEED {
                 last_update = get_time();
-                game_over = game.tick();
+                let game_state = game.tick();
+                match game_state {
+                    types::GameState::Continue => continue,
+                    types::GameState::WinA => { 
+                        score_a += 1;
+                        game = Game::new();
+                        last_update = get_time();
+                    },
+                    types::GameState::WinB => {
+                        score_b += 1;
+                        game = Game::new();
+                        last_update = get_time();
+                    },
+                }
+                if score_a == types::MAX_SCORE || score_b == types::MAX_SCORE {
+                    game_over = true;
+                    continue;
+                }
             }
             game.render();
+            render_scores(score_a, score_b);
         } else {
             clear_background(WHITE);
             let text1 = "  Game Over. Press [enter] to play again.";
@@ -44,6 +71,8 @@ async fn main() {
                 game = Game::new();
                 last_update = get_time();
                 game_over = false;
+                score_a = 0;
+                score_b = 0;
             }
         }
         next_frame().await
