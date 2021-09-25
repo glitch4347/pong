@@ -43,6 +43,17 @@ impl Bar {
             game.render_pixel((self.x as i32, i as i32), WHITE);
         }
     }
+
+    fn intersect(&self, ball: &Ball) -> bool {
+        if ball.position.0 != self.x as i32 {
+            return false;
+        }
+        if ball.position.1 < self.offset as i32 {
+            return false;
+        }
+        return ball.position.1 <= (self.offset + self.length) as i32;
+    }
+
     fn tick(&mut self) {
         if self.dir != 0 {
             if self.dir == -1 && self.offset > 1 {
@@ -122,17 +133,13 @@ impl Game {
             self.ball.dir.1 *= -1;
         }
 
-        if self.ball.position.0 == 1 && 
-            self.ball.position.1 >= self.bar_left.offset as i32 &&
-            self.ball.position.1 <= self.bar_left.offset as i32 + self.bar_left.length as i32 {
-                self.ball.dir.0 *= -1;
-            }
+        if self.bar_left.intersect(&self.ball) {
+            self.ball.dir.0 *= -1;
+        }
 
-        if self.ball.position.0 + 1 == GAME_WIDTH as i32 && 
-            self.ball.position.1 >= self.bar_right.offset as i32 &&
-            self.ball.position.1 <= self.bar_right.offset as i32 + self.bar_right.length as i32 {
-                self.ball.dir.0 *= -1;
-            }
+        if self.bar_right.intersect(&self.ball) {
+            self.ball.dir.0 *= -1;
+        }
 
         self.ball.position.0 += self.ball.dir.0;
         self.ball.position.1 += self.ball.dir.1;
