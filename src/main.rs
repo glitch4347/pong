@@ -1,7 +1,21 @@
 use macroquad::prelude::*;
 
 
-type Point = (i32, i32);
+const PIXEL_WIDTH: u32 = 8;
+const PIXEL_HEIGHT: u32 = 8;
+
+const GAME_SCREEN_WIDTH: u32 = 1024;
+const GAME_SCREEN_HEIGHT: u32 = 1024;
+
+const GAME_WIDTH: u32 = GAME_SCREEN_WIDTH / PIXEL_WIDTH;
+const GAME_HEIGHT: u32 = GAME_SCREEN_HEIGHT / PIXEL_HEIGHT;
+
+const BAR_LENGTH: u32 = 50;
+
+
+// it's i32 not u32 because we want to work as vectors
+type Point = (i32, i32); 
+
 
 struct Ball {
     position: Point,
@@ -14,11 +28,10 @@ impl Ball {
     }
 }
 
-
 struct Bar {
-    length: i32,
-    offset: i32,
-    x: i32,
+    length: u32,
+    offset: u32,
+    x: u32,
     dir: i32
 }
 
@@ -27,16 +40,16 @@ impl Bar {
         let from = self.offset;
         let to = self.offset + self.length;
         for i in from..to {
-            game.render_pixel((self.x, i), WHITE);
+            game.render_pixel((self.x as i32, i as i32), WHITE);
         }
     }
-    fn tick(&mut self, vertical_offset: i32) {
+    fn tick(&mut self) {
         if self.dir != 0 {
             if self.dir == -1 && self.offset > 1 {
                 self.offset -= 1;
             }
 
-            if self.dir == 1 && self.offset + self.length + 1 < vertical_offset {
+            if self.dir == 1 && self.offset + self.length + 1 < GAME_HEIGHT {
                 self.offset += 1;
             }
             self.dir = 0;
@@ -46,12 +59,6 @@ impl Bar {
 
         
 struct Game {
-    pixel_width: i32,
-    pixel_heigh: i32,
-    game_screen_width: i32,
-    game_screen_height: i32,
-    game_width: i32,
-    game_height: i32,
     bar_left: Bar,
     bar_right: Bar,
     ball: Ball
@@ -60,43 +67,27 @@ struct Game {
 impl Game {
     fn new() -> Game {
 
-        let pixel_width = 14;
-        let pixel_heigh = 14;
-        let game_screen_width = 658;
-        let game_screen_height = 406;
-        let game_width = 658 / 14;
-        let game_height = 406 / 14;
-
-        let bar_length = 10;
-        let bar_offset = 8;
-
-        let bar_left = Bar { 
-            length: bar_length, 
-            offset: bar_offset,
+        let bar_left = Bar {
+            length: BAR_LENGTH,
+            offset: (GAME_HEIGHT - BAR_LENGTH) / 2,
             x: 0,
             dir: 0
         };
 
         let bar_right = Bar { 
-            length: bar_length, 
-            offset: bar_offset,
-            x: game_width - 1,
+            length: BAR_LENGTH,
+            offset: (GAME_HEIGHT - BAR_LENGTH) / 2,
+            x: GAME_WIDTH - 1,
             dir: 0
         };
 
         let ball = Ball {
-            position: (game_width / 2, game_height / 2),
+            position: (GAME_WIDTH as i32 / 2, GAME_HEIGHT as i32 / 2),
             dir: (1, 1)
         };
         
 
         return Game {
-            pixel_width,
-            pixel_heigh,
-            game_screen_width,
-            game_screen_height,
-            game_width,
-            game_height,
             bar_left,
             bar_right,
             ball
@@ -119,33 +110,34 @@ impl Game {
     }
 
     fn tick(&mut self) -> bool {
-        self.bar_left.tick(self.game_height);
-        self.bar_right.tick(self.game_height);
+        self.bar_left.tick();
+        self.bar_right.tick();
         
-        if self.ball.position.1 as f32 + self.ball.dir.1 as f32 >= self.game_height as f32 {
+        if self.ball.position.1 as i32 + self.ball.dir.1 >= GAME_HEIGHT as i32 {
+            self.ball.position.1 = GAME_HEIGHT as i32;
             self.ball.dir.1 *= -1;
         }
         
-        if self.ball.position.1 + self.ball.dir.1 <= 0 {
+        if self.ball.position.1 as i32 + self.ball.dir.1 <= 0 {
             self.ball.dir.1 *= -1;
         }
 
         if self.ball.position.0 == 1 && 
-            self.ball.position.1 >= self.bar_left.offset &&
-            self.ball.position.1 <= self.bar_left.offset + self.bar_left.length {
+            self.ball.position.1 >= self.bar_left.offset as i32 &&
+            self.ball.position.1 <= self.bar_left.offset as i32 + self.bar_left.length as i32 {
                 self.ball.dir.0 *= -1;
             }
 
-        if self.ball.position.0 + 1 == self.game_width && 
-            self.ball.position.1 >= self.bar_right.offset &&
-            self.ball.position.1 <= self.bar_right.offset + self.bar_right.length {
+        if self.ball.position.0 + 1 == GAME_WIDTH as i32 && 
+            self.ball.position.1 >= self.bar_right.offset as i32 &&
+            self.ball.position.1 <= self.bar_right.offset as i32 + self.bar_right.length as i32 {
                 self.ball.dir.0 *= -1;
             }
 
         self.ball.position.0 += self.ball.dir.0;
         self.ball.position.1 += self.ball.dir.1;
 
-        if self.ball.position.0 < 0 || self.ball.position.0 > self.game_width {
+        if self.ball.position.0 < 0 || self.ball.position.0 > GAME_WIDTH as i32 {
             return true;
         } else {
             return false;
@@ -161,27 +153,27 @@ impl Game {
     }
 
     fn render_pixel(&self, p: Point, color: Color) {
-        let pw = screen_width() * (self. pixel_width as f32) / (self.game_screen_width as f32);
-        let ph = screen_height() * (self. pixel_heigh as f32) / (self.game_screen_height as f32);
+        let pw = screen_width() * (PIXEL_WIDTH as f32) / (GAME_SCREEN_WIDTH as f32);
+        let ph = screen_height() * (PIXEL_HEIGHT as f32) / (GAME_SCREEN_HEIGHT as f32);
         let x = pw * (p.0 as f32);
         let y = ph * (p.1 as f32);
         draw_rectangle(x, y, pw, ph, color);
     }
 
     fn render_borders(&self) {
-        let middle = self.game_width / 2;
-        for i in 0..self.game_height {
+        let middle = GAME_WIDTH / 2;
+        for i in 0..GAME_HEIGHT {
             if i % 2 == 0 {
-                self.render_pixel((middle, i), GRAY);
+                self.render_pixel((middle as i32, i as i32), GRAY);
             }
         }
         draw_line(
             0., 0., screen_width() , 0., 
-            self.pixel_heigh as f32, GRAY
+            PIXEL_HEIGHT as f32, GRAY
         );
         draw_line(
             0., screen_height(), screen_width() , screen_height(), 
-            self.pixel_heigh as f32, GRAY
+            PIXEL_HEIGHT as f32, GRAY
         );
     }
 
