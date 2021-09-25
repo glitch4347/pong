@@ -12,6 +12,8 @@ const GAME_HEIGHT: u32 = GAME_SCREEN_HEIGHT / PIXEL_HEIGHT;
 
 const BAR_LENGTH: u32 = 50;
 
+const GAME_SPEED: f64 = 0.04;
+
 
 // it's i32 not u32 because we want to work as vectors
 type Point = (i32, i32); 
@@ -43,11 +45,18 @@ impl Bar {
             game.render_pixel((self.x as i32, i as i32), WHITE);
         }
     }
-
-    fn intersect(&self, ball: &Ball) -> bool {
-        if ball.position.0 != self.x as i32 {
-            return false;
+    
+    fn intersect(&self, ball: &Ball, left: bool) -> bool {
+        if left {
+            if ball.position.0 > self.x as i32 + 1 {
+                return false;
+            }
+        } else {
+            if ball.position.0 < self.x as i32 {
+                return false;
+            }
         }
+            
         if ball.position.1 < self.offset as i32 {
             return false;
         }
@@ -94,7 +103,7 @@ impl Game {
 
         let ball = Ball {
             position: (GAME_WIDTH as i32 / 2, GAME_HEIGHT as i32 / 2),
-            dir: (1, 1)
+            dir: (2, 1)
         };
         
 
@@ -133,12 +142,14 @@ impl Game {
             self.ball.dir.1 *= -1;
         }
 
-        if self.bar_left.intersect(&self.ball) {
+        if self.bar_left.intersect(&self.ball, true) {
             self.ball.dir.0 *= -1;
+            // TODO: add momentum from bar movement
         }
 
-        if self.bar_right.intersect(&self.ball) {
+        if self.bar_right.intersect(&self.ball, false) {
             self.ball.dir.0 *= -1;
+            // TODO: add momentum from bar movement
         }
 
         self.ball.position.0 += self.ball.dir.0;
@@ -195,19 +206,18 @@ async fn main() {
 
     let mut game= Game::new();
     let mut last_update = get_time();
-    let speed = 0.1;
     let mut game_over = false;
     loop {
         if !game_over {
             game.handle_keys();
-            if get_time() - last_update > speed {
+            if get_time() - last_update > GAME_SPEED {
                 last_update = get_time();
                 game_over = game.tick();
             }
             game.render();
         } else {
             clear_background(WHITE);
-            let text1 = "Game Over. Press [enter] to play again.";
+            let text1 = "  Game Over. Press [enter] to play again.";
             let text2 = "[Q] and [A] to move left bar and arrows to move right bar";
             let font_size = 30.;
             let text_size = measure_text(text1, None, font_size as _, 1.0);
